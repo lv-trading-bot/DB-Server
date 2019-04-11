@@ -1,5 +1,6 @@
 const moment = require('moment');
 const buildCandle = require('./buildCandles');
+const _ = require('lodash');
 
 
 /**
@@ -47,7 +48,7 @@ const buidlFeature = function (exchangeName, asset, currency, candleSize, from, 
             }
             retCandles.push(retCandle);
         }
-        resolve(retCandles)
+        resolve(_.slice(retCandles, maxHistoryCandle)); 
     })
 }
 
