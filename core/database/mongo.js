@@ -75,7 +75,7 @@ MongoDb.prototype.readCandles = function (exchange, asset, currency, from, to) {
             const unixOfFrom = from.utc().unix()*1000;
             const unixOfTo = to.utc().unix()*1000;
             collection.aggregate([
-                {$match: {start: {$gte: unixOfFrom, $lte: unixOfTo}}},
+                {$match: {start: {$gte: unixOfFrom, $lt: unixOfTo}}},
                 {$sort: {start: 1}}
             ]).toArray((err, res) => {
                 if (err) reject(err);

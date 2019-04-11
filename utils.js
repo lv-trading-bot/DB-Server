@@ -20,4 +20,8 @@ utils.generateCollectionName = (exchange, asset, currency) => {
     return [exchange, asset, currency].join("");
 }
 
+utils.getConfig = () => {
+    return require('./config');
+}
+
 module.exports = utils;
