@@ -19,6 +19,7 @@ const axios = require('axios');
 const _ = require('lodash');
 const moment = require('moment');
 const log = require('../../log');
+const utils = require('../../utils');
 
 /**
  * @param {string} asset - Example "ETH", "BTC",...
@@ -59,7 +60,7 @@ Binance.prototype.getCandles = function (startTime, endTime) {
                 else {
                     // Có thể là do rớt mạng
                     log.info('' + err);
-                    await wait(1000);
+                    await utils.wait(1000);
                     resolve(await this.getCandles(startTime, endTime));
                 }
             })
@@ -82,17 +83,5 @@ Binance.prototype._processData = (data) => {
         return candle;
     })
 }
-
-/**
- * @param {Number} milisecond 
- */
-const wait = (milisecond) => {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve();
-        }, milisecond);
-    })
-}
-
 
 module.exports = Binance;
