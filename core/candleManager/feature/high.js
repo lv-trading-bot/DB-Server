@@ -1,16 +1,21 @@
-const candleRequire = 0;
+const historyCandlesRequire = 0;
 
 const Feature = function() {
 
 }
 
-Feature.prototype.update = function (candle) {
-    return candle.high;
+/**
+ * @param {Number} i - index
+ * @param {Array} candles - Array candles 
+ */
+
+Feature.prototype.update = function (i, candles) {
+    return candles[i].high;
 }
 
 
-Feature.prototype.candleRequire = function() {
-    return candleRequire;
+Feature.prototype.historyCandlesRequire = function() {
+    return historyCandlesRequire;
 }
 
 module.exports = Feature;

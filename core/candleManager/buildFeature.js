@@ -21,7 +21,7 @@ const buidlFeature = function (exchangeName, asset, currency, candleSize, from, 
         for (let i = 0; i < features.length; i++) {
             try {
                 let feature = new (require('./feature/' + features[i]))();
-                let candleRequre = feature.candleRequire();
+                let candleRequre = feature.historyCandlesRequire();
                 maxHistoryCandle = candleRequre > maxHistoryCandle ? candleRequre : maxHistoryCandle;
                 listFeature.push({name: features[i], feature});
             } catch (error) {
@@ -44,7 +44,7 @@ const buidlFeature = function (exchangeName, asset, currency, candleSize, from, 
         for (let i = 0; i < candles.length; i++) {
             let retCandle = {};
             for (let j = 0; j < listFeature.length; j++) {
-                retCandle[listFeature[j].name] = listFeature[j].feature.update(candles[i]);
+                retCandle[listFeature[j].name] = listFeature[j].feature.update(i, candles);
             }
             retCandles.push(retCandle);
         }
