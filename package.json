@@ -7,7 +7,9 @@
   },
   "scripts": {
     "start": "node ./bin/www > log.txt | node ./core/index.js",
-    "devstart": "nodemon ./bin/www > log.txt | nodemon ./core/index.js"
+    "devstart": "nodemon ./bin/www",
+    "devsync": "nodemon ./core/index.js",
+    "sync": "node ./core/index.js"
   },
   "dependencies": {
     "async": "^2.6.2",

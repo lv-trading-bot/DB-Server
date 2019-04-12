@@ -13,17 +13,25 @@ const _ = require('lodash');
  * @param {Array} features - array of features
  * @param {Object} database - instance of database
  */
-const buidlFeature = function (exchangeName, asset, currency, candleSize, from, to, features, database) {
+const buildFeature = function (exchangeName, asset, currency, candleSize, from, to, features, database) {
     return new Promise(async (resolve, reject) => {
         // Load feature và xem candle lịch sử cần lấy tối đa là bao nhiêu
         let maxHistoryCandle = 0;
         let listFeature = [];
         for (let i = 0; i < features.length; i++) {
             try {
-                let feature = new (require('./feature/' + features[i]))();
+                if (typeof features[i] === 'string') {
+                    features[i] = {
+                        name: features[i]
+                    }
+                }
+                let feature = new(require('./feature/' + features[i].name))(features[i].params);
                 let candleRequre = feature.historyCandlesRequire();
                 maxHistoryCandle = candleRequre > maxHistoryCandle ? candleRequre : maxHistoryCandle;
-                listFeature.push({name: features[i], feature});
+                listFeature.push({
+                    name: features[i].name,
+                    feature
+                });
             } catch (error) {
                 // load k được thì bỏ qua
             }
@@ -48,8 +56,8 @@ const buidlFeature = function (exchangeName, asset, currency, candleSize, from, 
             }
             retCandles.push(retCandle);
         }
-        resolve(_.slice(retCandles, maxHistoryCandle)); 
+        resolve(_.slice(retCandles, maxHistoryCandle));
     })
 }
 
-module.exports = buidlFeature;
+module.exports = buildFeature;
