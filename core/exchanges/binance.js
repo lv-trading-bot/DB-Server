@@ -2,23 +2,25 @@ const baseUrl = " https://api.binance.com";
 const apiGetKlines = "/api/v1/klines";
 const limit = 1000;
 const key_Value = [
-    'start', 
-    'open', 
-    'high', 
-    'low', 
-    'close', 
-    'volume', 
-    'end_time', 
-    'quote_asset_volume', 
-    'trades', 
-    'taker_buy_base_asset_volume', 
+    'start',
+    'open',
+    'high',
+    'low',
+    'close',
+    'volume',
+    'end_time',
+    'quote_asset_volume',
+    'trades',
+    'taker_buy_base_asset_volume',
     'taker_buy_quote_asset_volume',
-    'ignore'];
+    'ignore'
+];
 
 const axios = require('axios');
 const _ = require('lodash');
 const moment = require('moment');
 const log = require('../../log');
+const utils = require('../../utils');
 
 /**
  * @param {string} asset - Example "ETH", "BTC",...
@@ -39,7 +41,7 @@ Binance.prototype.getCandles = function (startTime, endTime) {
         let reqData = {
             symbol: this.pair,
             startTime: startTime.startOf('minute').utc().unix() * 1000,
-            endTime: endTime.utc().startOf('minute').unix() * 1000 -1,
+            endTime: endTime.utc().startOf('minute').unix() * 1000 - 1,
             limit,
             interval: "1m"
         }
@@ -47,19 +49,20 @@ Binance.prototype.getCandles = function (startTime, endTime) {
         let url = baseUrl + apiGetKlines;
 
         axios.get(url, {
-            params: reqData
-        })
+                params: reqData
+            })
             .then((res) => {
                 log.info(`${res.data.length} candles of ${this.asset}/${this.currency} from ${startTime.utc().format("YYYY-MM-DD HH:mm:ss")} to ${endTime.utc().format("YYYY-MM-DD HH:mm:ss")}`)
                 resolve(this._processData(res.data));
             })
             .catch(async err => {
-                if(err.response)
+                if (err.response) {
+                    log.info(err.response);
                     reject(new Error(err.response.data.msg));
-                else {
+                } else {
                     // Có thể là do rớt mạng
                     log.info('' + err);
-                    await wait(1000);
+                    await utils.wait(1000);
                     resolve(await this.getCandles(startTime, endTime));
                 }
             })
@@ -76,23 +79,11 @@ Binance.prototype.getNewestCandles = function (startTime) {
 Binance.prototype._processData = (data) => {
     return _.map(data, _candle => {
         let candle = {};
-        for(let i = 0; i < key_Value.length; i++) {
+        for (let i = 0; i < key_Value.length; i++) {
             candle[key_Value[i]] = _candle[i];
         }
         return candle;
     })
 }
-
-/**
- * @param {Number} milisecond 
- */
-const wait = (milisecond) => {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve();
-        }, milisecond);
-    })
-}
-
 
 module.exports = Binance;

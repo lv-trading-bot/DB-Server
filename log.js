@@ -9,7 +9,8 @@
 var moment = require('moment');
 var fmt = require('util').format;
 var _ = require('lodash');
-var config = require('./config');
+var utils = require('./utils');
+var config = utils.getConfig();
 var debug = config.debug;
 var silent = config.silent;
 

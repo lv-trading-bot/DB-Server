@@ -1,7 +1,8 @@
 const moment = require('moment');
-const config = require('../config');
 const _ = require('lodash');
 const log = require('../log');
+const utils = require('../utils');
+const config = utils.getConfig();
 const tick = 1; // minute
 
 const beginAt = config.beginAt;
@@ -40,7 +41,7 @@ const syncRealtimeCandle = async (Exchange, exchangeName, asset, currency, begin
                 asset, 
                 currency,
                 moment(latestCandle.start).add(1, 'm'),
-                moment().startOf('minute').subtract(1, 'millisecond'),
+                moment().startOf('minute'),
                 database);
             latestCandle = res ? res: latestCandle;
         }, tick * 60 * 1000)
@@ -61,7 +62,7 @@ const syncHistoryCandle = (Exchange, exchangeName, asset, currency, beginAt, dat
             // Chia đoạn lớn thành những đoạn nhỏ để kiểm tra
             // Nếu vượt quá tương hiện tại thì gán bằng hiện tại
             if (iterator.end.isAfter(moment().startOf('minute'))) {
-                iterator.end = moment().startOf('minute');
+                iterator.end = moment().utc().startOf('minute');
                 isChecking = false;
             }
             try {
@@ -78,7 +79,7 @@ const syncHistoryCandle = (Exchange, exchangeName, asset, currency, beginAt, dat
                         let startOfCurCandle = moment(curCandle.start);
                         // Kiểm tra nếu candle trước và candle sau trùng nhau thì xóa bớt 1 candle sau
                         if (lastCandle.start === curCandle.start) {
-                            log.info(`candle ${startOfLastCandle.format("YYYY-MM-DD HH:mm")} duplicate, remove one`);
+                            log.info(`${asset}/${currency}: candle ${startOfLastCandle.format("YYYY-MM-DD HH:mm")} duplicate, remove one`);
                             await database.removeCandle(exchangeName, asset, currency, curCandle._id)
                             continue;
                         }
@@ -86,7 +87,7 @@ const syncHistoryCandle = (Exchange, exchangeName, asset, currency, beginAt, dat
                         else if (startOfLastCandle.clone().add(1, 'm').isSame(startOfCurCandle)) {
                             // Nếu trước đó có đoạn chưa hợp lệ thì đóng đoạn và sync
                             if (dateRangeWasLost.start) {
-                                dateRangeWasLost.end = startOfCurCandle.clone().subtract(1, 'millisecond');
+                                dateRangeWasLost.end = startOfCurCandle.clone();
                                 // Sync lại đoạn còn thiếu
                                 latestCandle = await syncPairWithTime(
                                     Exchange,
@@ -115,14 +116,14 @@ const syncHistoryCandle = (Exchange, exchangeName, asset, currency, beginAt, dat
                 // Kiểm tra đoạn trên đã được thêm đầy đủ chưa
                 if (lastCandle) {
                     // Nếu candle cuối cùng không trùng với điểm kết thúc thì sync từ candle cuối cùng đến điểm kết thúc
-                    if (!moment(lastCandle.start).isSame(iterator.end)) {
+                    if (!moment(lastCandle.start).isSame(iterator.end.clone().subtract(1, 'm'))) {
                         latestCandle = await syncPairWithTime(
                             Exchange,
                             exchangeName,
                             asset,
                             currency,
                             moment(lastCandle.start).add(1, 'm'),
-                            iterator.end.subtract(1, 'millisecond'),
+                            iterator.end,
                             database);
                     }
                 } else {

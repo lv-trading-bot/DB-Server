@@ -7,6 +7,12 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Debug api",
+            "program": "${workspaceFolder}\\bin\\www"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Debug core",
             "program": "${workspaceFolder}\\core\\index"
         }

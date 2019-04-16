@@ -6,8 +6,10 @@
     "node": ">=8.11.2"
   },
   "scripts": {
-    "start": "node ./bin/www",
-    "devstart": "nodemon ./bin/www"
+    "start": "node ./bin/www > log.txt | node ./core/index.js",
+    "devstart": "nodemon ./bin/www",
+    "devsync": "nodemon ./core/index.js",
+    "sync": "node ./core/index.js"
   },
   "dependencies": {
     "async": "^2.6.2",

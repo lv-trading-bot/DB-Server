@@ -1,6 +1,7 @@
 const MongoClient = require('mongodb').MongoClient;
 const log = require('../../log');
 const ObjectId = require('mongodb').ObjectId;
+const utils = require('../../utils');
 
 /**
  * @param {string} connectionString - connection string
@@ -32,13 +33,13 @@ MongoDb.prototype._init = async function () {
 MongoDb.prototype.write = function (exchange, asset, currency, candles) {
     return new Promise(async (resolve, reject) => {
         if (!this.db) {
-            await wait(1000);
+            await utils.wait(1000);
             resolve(await this.write(exchange, asset, currency, candles));
             return;
         }
         // db ready to write data
         try {
-            let collectionName = generateCollectionName(exchange, asset, currency);
+            let collectionName = utils.generateCollectionName(exchange, asset, currency);
             if(candles.length !== 0) {
                 insertDocuments(this.db, collectionName, candles, (err, res) => {
                     if (err) reject(err);
@@ -63,18 +64,18 @@ MongoDb.prototype.write = function (exchange, asset, currency, candles) {
 MongoDb.prototype.readCandles = function (exchange, asset, currency, from, to) {
     return new Promise(async (resolve, reject) => {
         if (!this.db) {
-            await wait(1000);
+            await utils.wait(1000);
             resolve(await this.readCandles(exchange, asset, currency, from, to));
             return;
         }
         // Get the documents collection
-        const collection = this.db.collection(generateCollectionName(exchange, asset, currency));
+        const collection = this.db.collection(utils.generateCollectionName(exchange, asset, currency));
         // Find some documents
         try {
             const unixOfFrom = from.utc().unix()*1000;
             const unixOfTo = to.utc().unix()*1000;
             collection.aggregate([
-                {$match: {start: {$gte: unixOfFrom, $lte: unixOfTo}}},
+                {$match: {start: {$gte: unixOfFrom, $lt: unixOfTo}}},
                 {$sort: {start: 1}}
             ]).toArray((err, res) => {
                 if (err) reject(err);
@@ -95,12 +96,12 @@ MongoDb.prototype.readCandles = function (exchange, asset, currency, from, to) {
 MongoDb.prototype.removeCandle = function (exchange, asset, currency, id) {
     return new Promise(async (resolve, reject) => {
         if (!this.db) {
-            await wait(1000);
+            await utils.wait(1000);
             resolve(await this.removeCandle(exchange, asset, currency, id));
             return;
         }
         // Get the documents collection
-        const collection = this.db.collection(generateCollectionName(exchange, asset, currency));
+        const collection = this.db.collection(utils.generateCollectionName(exchange, asset, currency));
         // Find some documents
         try {
             collection.deleteOne({"_id": ObjectId(id)}, (err, res) => {
@@ -122,12 +123,12 @@ MongoDb.prototype.removeCandle = function (exchange, asset, currency, id) {
 MongoDb.prototype.readNLatestCandles = function (exchange, asset, currency, n) {
     return new Promise(async (resolve, reject) => {
         if (!this.db) {
-            await wait(1000);
+            await utils.wait(1000);
             resolve(await this.readNLatestCandles(exchange, asset, currency, n));
             return;
         }
         // Get the documents collection
-        const collection = this.db.collection(generateCollectionName(exchange, asset, currency));
+        const collection = this.db.collection(utils.generateCollectionName(exchange, asset, currency));
         // Find some documents
         try {
             collection.aggregate([
@@ -151,12 +152,12 @@ MongoDb.prototype.readNLatestCandles = function (exchange, asset, currency, n) {
 MongoDb.prototype.createIndex = function (exchange, asset, currency) {
     return new Promise(async (resolve, reject) => {
         if (!this.db) {
-            await wait(1000);
+            await utils.wait(1000);
             resolve(await this.createIndex(exchange, asset, currency));
             return;
         }
         // Get the documents collection
-        const collection = this.db.collection(generateCollectionName(exchange, asset, currency));
+        const collection = this.db.collection(utils.generateCollectionName(exchange, asset, currency));
         // Find some documents
         try {
             indexCollection(this.db, collection);
@@ -188,26 +189,6 @@ const insertDocuments = function (db, collectionName, candles, callback) {
     const collection = db.collection(collectionName);
     // Insert some documents
     collection.insertMany(candles, callback);
-}
-
-/**
- * @param {string} exchange - name of exchange
- * @param {string} asset - name of Asset
- * @param {string} currency - name of Currency
- */
-const generateCollectionName = (exchange, asset, currency) => {
-    return [exchange, asset, currency].join("");
-}
-
-/**
- * @param {Number} milisecond 
- */
-const wait = (milisecond) => {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve();
-        }, milisecond);
-    })
 }
 
 module.exports = MongoDb;
