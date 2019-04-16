@@ -74,10 +74,15 @@ MongoDb.prototype.readCandles = function (exchange, asset, currency, from, to) {
         try {
             const unixOfFrom = from.utc().unix()*1000;
             const unixOfTo = to.utc().unix()*1000;
-            collection.aggregate([
-                {$match: {start: {$gte: unixOfFrom, $lt: unixOfTo}}},
-                {$sort: {start: 1}}
-            ]).toArray((err, res) => {
+            // collection.aggregate([
+            //     {$match: {start: {$gte: unixOfFrom, $lt: unixOfTo}}},
+            //     {$sort: {start: 1}}
+            // ], { allowDiskUse: true }).toArray((err, res) => {
+            //     if (err) reject(err);
+            //     resolve(res);
+            // })
+
+            collection.find({start: {$gte: unixOfFrom, $lt: unixOfTo}}).sort({start: 1}).toArray((err, res) => {
                 if (err) reject(err);
                 resolve(res);
             })
@@ -157,12 +162,12 @@ MongoDb.prototype.createIndex = function (exchange, asset, currency) {
             return;
         }
         // Get the documents collection
-        const collection = this.db.collection(utils.generateCollectionName(exchange, asset, currency));
+        const collection = utils.generateCollectionName(exchange, asset, currency);
         // Find some documents
         try {
             indexCollection(this.db, collection);
         } catch (err) {
-           
+           console.log("" + err);
         }
         resolve();
     })
