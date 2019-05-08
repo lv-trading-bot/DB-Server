@@ -56,7 +56,9 @@ const buildFeature = function (exchangeName, asset, currency, candleSize, from, 
             }
             retCandles.push(retCandle);
         }
-        resolve(_.slice(retCandles, maxHistoryCandle));
+        resolve(_.filter(retCandles, (candle) => {
+            return (parseInt(candle.start) >= parseInt(from))
+        }));
     })
 }
 

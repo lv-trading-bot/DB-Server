@@ -9,10 +9,10 @@ const beginAt = config.beginAt;
 const pairs = config.pairs;
 const adapterDatabase = config.adapterDatabase;
 const configOfDatabase = config[adapterDatabase];
-const Database = new (require('./database/' + adapterDatabase))(configOfDatabase);
+const Database = new(require('./database/' + adapterDatabase))(configOfDatabase);
 
 const runProcessForOnePair = async (exchangeName, asset, currency, beginAt, database) => {
-    const Exchange = new (require('./exchanges/' + exchangeName))(asset, currency);
+    const Exchange = new(require('./exchanges/' + exchangeName))(asset, currency);
     // Đánh index
     await Database.createIndex(exchangeName, asset, currency);
 
@@ -27,24 +27,27 @@ const runProcessForOnePair = async (exchangeName, asset, currency, beginAt, data
 
 const syncRealtimeCandle = async (Exchange, exchangeName, asset, currency, beginAt, database, _latestCandle) => {
     let latestCandle = null;
-    if(_latestCandle) {
+    if (_latestCandle) {
         latestCandle = _latestCandle;
     } else {
         let res = await database.readNLatestCandles(exchangeName, asset, currency, 1)
         latestCandle = res[0];
     }
     return new Promise((resolve, reject) => {
-        let interval = setInterval(async () => {
-            let res = await syncPairWithTime(
-                Exchange, 
-                exchangeName, 
-                asset, 
-                currency,
-                moment(latestCandle.start).add(1, 'm'),
-                moment().startOf('minute'),
-                database);
-            latestCandle = res ? res: latestCandle;
-        }, tick * 60 * 1000)
+        //force to tick at the first second of a minute 
+        setTimeout(() => {
+            let interval = setInterval(async () => {
+                let res = await syncPairWithTime(
+                    Exchange,
+                    exchangeName,
+                    asset,
+                    currency,
+                    moment(latestCandle.start).add(1, 'm'),
+                    moment().startOf('minute'),
+                    database);
+                latestCandle = res ? res : latestCandle;
+            }, tick * 60 * 1000)
+        }, (60 - parseInt(moment().second()) + 1) * 1000)
     })
 }
 
@@ -137,8 +140,7 @@ const syncHistoryCandle = (Exchange, exchangeName, asset, currency, beginAt, dat
                         iterator.end,
                         database);
                 }
-            }
-            catch (err) {
+            } catch (err) {
                 reject(err);
             }
 
@@ -172,8 +174,7 @@ const syncPairWithTime = (exchange, exchangeName, asset, currency, beginAt, endA
                     await database.write(exchangeName, asset, currency, candleFromExchange);
                 }
                 lastCandle = candleFromExchange[candleFromExchange.length - 1];
-            }
-            catch (err) {
+            } catch (err) {
                 reject(err);
             }
 
