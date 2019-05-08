@@ -14,6 +14,9 @@ var config = utils.getConfig();
 var debug = config.debug;
 var silent = config.silent;
 
+var production = config.production;
+var loggerAdapter = config.loggerAdapter;
+
 var sendToParent = function() {
   var send = method => (...args) => {
     process.send({log: method, message: args.join(' ')});
@@ -29,6 +32,11 @@ var sendToParent = function() {
 
 var Log = function() {
   _.bindAll(this);
+
+  if(production) {
+    this.logger = (require('./logger/' + loggerAdapter));
+  }
+
   this.env = 'standalone';
 
   if(this.env === 'standalone')
@@ -47,6 +55,9 @@ Log.prototype = {
     message += fmt.apply(null, args);
 
     this.output[method](message);
+    if(production) {
+      this.logger[method](message);
+    }
   },
   error: function() {
     this._write('error', arguments);
