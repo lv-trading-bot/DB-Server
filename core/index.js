@@ -53,15 +53,15 @@ const syncHistoryCandle = (Exchange, exchangeName, asset, currency, beginAt, dat
     return new Promise(async (resolve, reject) => {
         // Kiểm tra các đoạn còn thiếu
         let iterator = {
-            start: moment(beginAt).startOf('minute'),
-            end: moment(beginAt).startOf('minute').add(24, 'h')
+            start: moment.utc(beginAt).startOf('minute'),
+            end: moment.utc(beginAt).startOf('minute').add(24, 'h')
         }
 
         let isChecking = true;
         while (isChecking) {
             // Chia đoạn lớn thành những đoạn nhỏ để kiểm tra
             // Nếu vượt quá tương hiện tại thì gán bằng hiện tại
-            if (iterator.end.isAfter(moment().startOf('minute'))) {
+            if (iterator.end.utc().isAfter(moment.utc().startOf('minute'))) {
                 iterator.end = moment().utc().startOf('minute');
                 isChecking = false;
             }
@@ -75,19 +75,19 @@ const syncHistoryCandle = (Exchange, exchangeName, asset, currency, beginAt, dat
                 for (let i = 0; i < dataCandlesWillCheck.length; i++) {
                     let curCandle = dataCandlesWillCheck[i];
                     if (lastCandle) {
-                        let startOfLastCandle = moment(lastCandle.start);
-                        let startOfCurCandle = moment(curCandle.start);
+                        let startOfLastCandle = moment.utc(lastCandle.start);
+                        let startOfCurCandle = moment.utc(curCandle.start);
                         // Kiểm tra nếu candle trước và candle sau trùng nhau thì xóa bớt 1 candle sau
                         if (lastCandle.start === curCandle.start) {
-                            log.info(`${asset}/${currency}: candle ${startOfLastCandle.format("YYYY-MM-DD HH:mm")} duplicate, remove one`);
+                            log.info(`${asset}/${currency}: candle ${startOfLastCandle.utc().format("YYYY-MM-DD HH:mm")} duplicate, remove one`);
                             await database.removeCandle(exchangeName, asset, currency, curCandle._id)
                             continue;
                         }
                         // Nếu hợp lệ
-                        else if (startOfLastCandle.clone().add(1, 'm').isSame(startOfCurCandle)) {
+                        else if (startOfLastCandle.utc().clone().add(1, 'm').isSame(startOfCurCandle)) {
                             // Nếu trước đó có đoạn chưa hợp lệ thì đóng đoạn và sync
                             if (dateRangeWasLost.start) {
-                                dateRangeWasLost.end = startOfCurCandle.clone();
+                                dateRangeWasLost.end = startOfLastCandle.utc().clone();
                                 // Sync lại đoạn còn thiếu
                                 latestCandle = await syncPairWithTime(
                                     Exchange,
