@@ -82,7 +82,7 @@ const syncHistoryCandle = (Exchange, exchangeName, asset, currency, beginAt, dat
                         let startOfCurCandle = moment(curCandle.start);
                         // Kiểm tra nếu candle trước và candle sau trùng nhau thì xóa bớt 1 candle sau
                         if (lastCandle.start === curCandle.start) {
-                            log.info(`${asset}/${currency}: candle ${startOfLastCandle.format("YYYY-MM-DD HH:mm")} duplicate, remove one`);
+                            log.info(`${asset}/${currency}: candle ${startOfLastCandle.utc().format("YYYY-MM-DD HH:mm")} duplicate, remove one`);
                             await database.removeCandle(exchangeName, asset, currency, curCandle._id)
                             continue;
                         }
@@ -145,7 +145,7 @@ const syncHistoryCandle = (Exchange, exchangeName, asset, currency, beginAt, dat
             }
 
             // Tăng biến chạy để kiểm tra đoạn tiếp theo
-            iterator.start = iterator.end.clone().add(1, 'millisecond');
+            iterator.start = iterator.end.clone();
             iterator.end = iterator.start.clone().startOf('minute').add(24, 'h');
         }
         resolve(latestCandle);
