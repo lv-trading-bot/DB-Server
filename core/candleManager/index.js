@@ -7,6 +7,8 @@ const CandleManager = function () {
 
 }
 
+let database = null;
+
 /**
  * @param {String} exchangeName - Name of exchange
  * @param {String} asset - Name of Asset
@@ -20,7 +22,9 @@ CandleManager.prototype.getCandles = function (exchangeName, asset, currency, ca
     return new Promise(async (resolve, reject) => {
         const adapterDatabase = config.adapterDatabase;
         const configDatabase = config[adapterDatabase];
-        const database = new (require('../database/' + adapterDatabase))(configDatabase);
+        if (!database) {
+            database = new (require('../database/' + adapterDatabase))(configDatabase);
+        }
         let res = await buildFeature(exchangeName, asset, currency, candleSize, from, to, features, database)
         resolve(res)
     })
