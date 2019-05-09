@@ -6,10 +6,11 @@
     "node": ">=8.11.2"
   },
   "scripts": {
-    "start": "node ./bin/www > log.txt | node ./core/index.js",
+    "start": "node ./bin/www | node ./core/index.js",
     "devstart": "nodemon ./bin/www",
     "devsync": "nodemon ./core/index.js",
-    "sync": "node ./core/index.js"
+    "sync": "node ./core/index.js",
+    "startserver": "node ./bin/www"
   },
   "dependencies": {
     "async": "^2.6.2",
@@ -23,6 +24,7 @@
     "mongodb": "^3.2.3",
     "morgan": "~1.9.0",
     "pug": "2.0.0-beta11",
-    "semver": "^6.0.0"
+    "semver": "^6.0.0",
+    "talib": "^1.0.6"
   }
 }

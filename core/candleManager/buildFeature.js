@@ -52,7 +52,7 @@ const buildFeature = function (exchangeName, asset, currency, candleSize, from, 
         for (let i = 0; i < candles.length; i++) {
             let retCandle = {};
             for (let j = 0; j < listFeature.length; j++) {
-                retCandle[listFeature[j].name] = listFeature[j].feature.update(i, candles);
+                retCandle[listFeature[j].name] = await listFeature[j].feature.update(i, candles);
             }
             retCandles.push(retCandle);
         }
