@@ -38,16 +38,18 @@ const buildFeature = function (exchangeName, asset, currency, candleSize, from, 
         }
 
         let minuteWillAddBefore = maxHistoryCandle * candleSize;
+        finalFrom = moment(from).utc().subtract(minuteWillAddBefore, 'm');
+        finalTo = moment(to).utc();
 
         // Get candle 1m from database
         let candle1m = await database.readCandles(
             exchangeName,
             asset,
             currency,
-            moment(from).utc().subtract(minuteWillAddBefore, 'm'),
-            moment(to).utc());
+            finalFrom,
+            finalTo);
 
-        let candles = await buildCandle(candle1m, candleSize);
+        let candles = await buildCandle(candle1m, candleSize, finalFrom.valueOf(), finalTo.valueOf());
         let retCandles = [];
         for (let i = 0; i < candles.length; i++) {
             let retCandle = {};
