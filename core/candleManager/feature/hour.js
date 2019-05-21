@@ -4,7 +4,7 @@ class HourInDay {
   constructor() {}
 
   update(index, candles) {
-    return moment(parseInt(candles[index].start)).hour();
+    return moment(parseInt(candles[index].start)).utc().hour();
   }
 
   historyCandlesRequire() {
