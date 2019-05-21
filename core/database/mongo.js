@@ -2,6 +2,7 @@ const MongoClient = require('mongodb').MongoClient;
 const log = require('../../log');
 const ObjectId = require('mongodb').ObjectId;
 const utils = require('../../utils');
+const _ = require('lodash');
 
 /**
  * @param {string} connectionString - connection string
@@ -16,7 +17,7 @@ const MongoDb = function ({connectionString, dbName}) {
 
 MongoDb.prototype._init = async function () {
     try {
-        this.db = (await MongoClient.connect(this.connectionString, { useNewUrlParser: true })).db(this.dbName);
+        this.db = (await MongoClient.connect(this.connectionString, { useNewUrlParser: true, poolSize: 50 })).db(this.dbName);
         log.info("Connected successfully to mongodb server");
     }
     catch (err) {
@@ -33,6 +34,7 @@ MongoDb.prototype._init = async function () {
 MongoDb.prototype.write = function (exchange, asset, currency, candles) {
     return new Promise(async (resolve, reject) => {
         if (!this.db) {
+            log.warn("DB is initializing, retry in 1s");
             await utils.wait(1000);
             resolve(await this.write(exchange, asset, currency, candles));
             return;
@@ -64,6 +66,7 @@ MongoDb.prototype.write = function (exchange, asset, currency, candles) {
 MongoDb.prototype.readCandles = function (exchange, asset, currency, from, to) {
     return new Promise(async (resolve, reject) => {
         if (!this.db) {
+            log.warn("DB is initializing, retry in 1s");
             await utils.wait(1000);
             resolve(await this.readCandles(exchange, asset, currency, from, to));
             return;
@@ -72,8 +75,8 @@ MongoDb.prototype.readCandles = function (exchange, asset, currency, from, to) {
         const collection = this.db.collection(utils.generateCollectionName(exchange, asset, currency));
         // Find some documents
         try {
-            const unixOfFrom = from.utc().unix()*1000;
-            const unixOfTo = to.utc().unix()*1000;
+            const unixOfFrom = from.valueOf();
+            const unixOfTo = to.valueOf();
             // collection.aggregate([
             //     {$match: {start: {$gte: unixOfFrom, $lt: unixOfTo}}},
             //     {$sort: {start: 1}}
@@ -81,12 +84,15 @@ MongoDb.prototype.readCandles = function (exchange, asset, currency, from, to) {
             //     if (err) reject(err);
             //     resolve(res);
             // })
-
             collection.find({start: {$gte: unixOfFrom, $lt: unixOfTo}}).sort({start: 1}).toArray((err, res) => {
-                if (err) reject(err);
-                resolve(res);
+                if (err) {
+                    log.error(err);
+                    reject(err);
+                }
+                else resolve(res);
             })
         } catch (err) {
+            log.error(err);
             reject(err);
         }
     })
@@ -101,6 +107,7 @@ MongoDb.prototype.readCandles = function (exchange, asset, currency, from, to) {
 MongoDb.prototype.removeCandle = function (exchange, asset, currency, id) {
     return new Promise(async (resolve, reject) => {
         if (!this.db) {
+            log.warn("DB is initializing, retry in 1s");
             await utils.wait(1000);
             resolve(await this.removeCandle(exchange, asset, currency, id));
             return;
@@ -128,6 +135,7 @@ MongoDb.prototype.removeCandle = function (exchange, asset, currency, id) {
 MongoDb.prototype.readNLatestCandles = function (exchange, asset, currency, n) {
     return new Promise(async (resolve, reject) => {
         if (!this.db) {
+            log.warn("DB is initializing, retry in 1s");
             await utils.wait(1000);
             resolve(await this.readNLatestCandles(exchange, asset, currency, n));
             return;
@@ -157,6 +165,7 @@ MongoDb.prototype.readNLatestCandles = function (exchange, asset, currency, n) {
 MongoDb.prototype.createIndex = function (exchange, asset, currency) {
     return new Promise(async (resolve, reject) => {
         if (!this.db) {
+            log.warn("DB is initializing, retry in 1s");
             await utils.wait(1000);
             resolve(await this.createIndex(exchange, asset, currency));
             return;

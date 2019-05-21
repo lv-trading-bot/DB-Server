@@ -1,6 +1,7 @@
 const moment = require('moment');
 const buildCandle = require('./buildCandles');
 const _ = require('lodash');
+const log = require('../../log');
 
 
 /**
@@ -34,12 +35,13 @@ const buildFeature = function (exchangeName, asset, currency, candleSize, from, 
                 });
             } catch (error) {
                 // load k được thì bỏ qua
+                log.error(error);
             }
         }
 
         let minuteWillAddBefore = maxHistoryCandle * candleSize;
-        finalFrom = moment(from).utc().subtract(minuteWillAddBefore, 'm');
-        finalTo = moment(to).utc();
+        let finalFrom = moment(from).utc().subtract(minuteWillAddBefore, 'm');
+        let finalTo = moment(to).utc();
 
         // Get candle 1m from database
         let candle1m = await database.readCandles(
@@ -58,9 +60,12 @@ const buildFeature = function (exchangeName, asset, currency, candleSize, from, 
             }
             retCandles.push(retCandle);
         }
-        resolve(_.filter(retCandles, (candle) => {
+
+        let finalResult = _.filter(retCandles, (candle) => {
             return (parseInt(candle.start) >= parseInt(from))
-        }));
+        })
+
+        resolve(finalResult);
     })
 }
 

@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const log = require('../../log');
 
 /**
  * Function generate candle
@@ -21,7 +22,9 @@ const buildCandles = function (candle1m, candleSize, from, to) {
 
         // đã qua khoảng mới
         if (end <= curCandle1m.start) {
-            candles.push(calculateCandle(tempMem, defaultStart = begin));
+            const calculatedCandle = calculateCandle(tempMem, begin);
+            if (calculatedCandle) candles.push(calculatedCandle);
+            else log.error(`Cannot build candle from ${begin} to ${end}`);
             // reset thông số
             tempMem = [];
             begin = end;
@@ -33,13 +36,16 @@ const buildCandles = function (candle1m, candleSize, from, to) {
 
     // Nếu candle cuối đủ thì ghép luôn
     if ((to - begin) === candleSize * MINUTE_IN_MILLISECONDS) {
-        candles.push(calculateCandle(tempMem, defaultStart = begin));
+        const calculatedCandle = calculateCandle(tempMem, begin);
+        if (calculatedCandle) candles.push(calculatedCandle);
     }
     return candles;
 }
 
 const calculateCandle = (candle1m, defaultStart = null) => {
     var first = _.first(candle1m);
+
+    if (!first) return null;
 
     var f = parseFloat;
 

@@ -7,7 +7,10 @@ const CandleManager = function () {
 
 }
 
-let database = null;
+const adapterDatabase = config.adapterDatabase;
+const configDatabase = config[adapterDatabase];
+
+let database = new (require('../database/' + adapterDatabase))(configDatabase);
 
 /**
  * @param {String} exchangeName - Name of exchange
@@ -20,8 +23,6 @@ let database = null;
  */
 CandleManager.prototype.getCandles = function (exchangeName, asset, currency, candleSize, from, to, features) {
     return new Promise(async (resolve, reject) => {
-        const adapterDatabase = config.adapterDatabase;
-        const configDatabase = config[adapterDatabase];
         if (!database) {
             database = new (require('../database/' + adapterDatabase))(configDatabase);
         }
