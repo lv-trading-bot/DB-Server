@@ -26,8 +26,8 @@ config.pairs = [
 
 config.adapterDatabase = "mongo";
 config.mongo = {
-    connectionString: "mongodb://localhost:27017",
-    dbName:  "db_candles_of_cryptocurrency"
+    connectionString: process.env.MONGO_URL,
+    dbName:  "db_candles_of_cryptocurrency_docker"
 }
 
 config.debug = true;
