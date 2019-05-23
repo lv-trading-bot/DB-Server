@@ -50,7 +50,7 @@ Log.prototype = {
     if(!name)
       name = method.toUpperCase();
 
-    var message = moment().format('YYYY-MM-DD HH:mm:ss');
+    var message = moment().utc().format('YYYY-MM-DD HH:mm:ss');
     message += ' (' + name + '):\t';
     message += fmt.apply(null, args);
 

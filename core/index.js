@@ -3,7 +3,7 @@ const _ = require('lodash');
 const log = require('../log');
 const utils = require('../utils');
 const config = utils.getConfig();
-const tick = 1; // minute
+const TICK = 1; // minute
 
 const beginAt = config.beginAt;
 const pairs = config.pairs;
@@ -46,7 +46,7 @@ const syncRealtimeCandle = async (Exchange, exchangeName, asset, currency, begin
                     moment().startOf('minute'),
                     database);
                 latestCandle = res ? res : latestCandle;
-            }, tick * 60 * 1000)
+            }, TICK * 60 * 1000)
         }, (60 - parseInt(moment().second()) + 1) * 1000)
     })
 }
