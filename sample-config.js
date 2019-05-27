@@ -30,6 +30,8 @@ config.mongo = {
     dbName:  "db_candles_of_cryptocurrency_docker"
 }
 
+config.LIVE_TRADING_MANAGER_BASE_URL = process.env.LIVE_TRADING_MANAGER_BASE_URL || "http://localhost:3001";
+
 config.debug = true;
 config.silent = false;
 
