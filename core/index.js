@@ -42,7 +42,7 @@ const syncRealtimeCandle = async (Exchange, exchangeName, asset, currency, begin
                     exchangeName,
                     asset,
                     currency,
-                    moment(latestCandle.start).add(1, 'm'),
+                    moment(latestCandle.start).add(1, 'm').startOf('minute'),
                     moment().startOf('minute'),
                     database);
                 latestCandle = res ? res : latestCandle;
@@ -170,6 +170,9 @@ const syncPairWithTime = (exchange, exchangeName, asset, currency, beginAt, endA
             }
             try {
                 let candleFromExchange = await exchange.getCandles(iterator.start, iterator.end);
+
+                candleFromExchange = await tranformToValidDateRange(exchange, exchangeName, asset, currency, iterator.start, iterator.end, database, candleFromExchange, lastCandle);
+
                 if (candleFromExchange.length !== 0) {
                     await database.write(exchangeName, asset, currency, candleFromExchange);
                 }
@@ -183,6 +186,88 @@ const syncPairWithTime = (exchange, exchangeName, asset, currency, beginAt, endA
             iterator.end = iterator.start.clone().add(1, 'h');
         }
         resolve(lastCandle);
+    })
+}
+
+const tranformToValidDateRange = (exchange, exchangeName, asset, currency, beginAt, endAt, database, candleFromExchange, previousCandle) => {
+    return new Promise(async (resolve, reject) => {
+        // Check các candle bị thiếu do sàn trả về k có để bổ sung cho đầy đủ
+        let total = endAt.diff(beginAt, 'minute');
+
+        // Kiểm tra xem có đủ tổng số candle không?
+        if (candleFromExchange.length < total) {
+            let indexCandles = 0;
+            let newCandleFromExchange = [];
+            for(let i = 0; i < total; i++) {
+                let start = beginAt.valueOf() + i * 60 * 1000;
+
+                // Hợp lệ
+                if(candleFromExchange[indexCandles] && start == candleFromExchange[indexCandles].start) {
+                    newCandleFromExchange.push(candleFromExchange[indexCandles]);
+                    indexCandles++;
+                } else {
+                // Không hợp lệ
+                    // Đoạn đầu, lấy previous candle
+                    if(i === 0) {
+                        // Không có previousCandle phải query từ db
+                        if(!previousCandle) {
+                            let _candle = await database.readCandles(exchangeName, asset, currency, start - (60 * 1000), start - 1);
+                            if(_candle[0]) {
+                                newCandleFromExchange.push({
+                                    "start" : start,
+                                    "open" : _candle[0].close,
+                                    "high" : _candle[0].close,
+                                    "low" : _candle[0].close,
+                                    "close" : _candle[0].close,
+                                    "volume" : 0,
+                                    "end_time" : start + (60 * 1000) - 1,
+                                    "quote_asset_volume" : 0,
+                                    "trades" : 0,
+                                    "taker_buy_base_asset_volume" : 0,
+                                    "taker_buy_quote_asset_volume" : 0,
+                                    "ignore" : "0"
+                                });
+                            } else {
+                                throw new Error("Không tìm thấy previous candle in database");
+                            }
+                        } else {
+                            newCandleFromExchange.push({
+                                "start" : start,
+                                "open" : previousCandle.close,
+                                "high" : previousCandle.close,
+                                "low" : previousCandle.close,
+                                "close" : previousCandle.close,
+                                "volume" : 0,
+                                "end_time" : start + (60 * 1000) - 1,
+                                "quote_asset_volume" : 0,
+                                "trades" : 0,
+                                "taker_buy_base_asset_volume" : 0,
+                                "taker_buy_quote_asset_volume" : 0,
+                                "ignore" : "0"
+                            });
+                        }
+                    } else {
+                        newCandleFromExchange.push({
+                            "start" : start,
+                            "open" : newCandleFromExchange[i - 1].close,
+                            "high" : newCandleFromExchange[i - 1].close,
+                            "low" : newCandleFromExchange[i - 1].close,
+                            "close" : newCandleFromExchange[i - 1].close,
+                            "volume" : 0,
+                            "end_time" : start + (60 * 1000) - 1,
+                            "quote_asset_volume" : 0,
+                            "trades" : 0,
+                            "taker_buy_base_asset_volume" : 0,
+                            "taker_buy_quote_asset_volume" : 0,
+                            "ignore" : "0"
+                        });
+                    }
+                }
+            }
+            resolve(newCandleFromExchange);
+        } else {
+            resolve(candleFromExchange);
+        }
     })
 }
 
