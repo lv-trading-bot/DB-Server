@@ -57,3 +57,4 @@
     - `MONGO_URL`: connection string
     - `LIVE_TRADING_MANAGER_BASE_URL`: Địa chỉ của con live_manager
     - `ID`: Id để bắn sang live_manager để định danh
+- Thời gian bắt đầu `sync (beginAt)` phải tránh nằm trong khoảng `DOWNTIME` của sàn.

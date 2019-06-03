@@ -80,7 +80,7 @@ Binance.prototype._processData = (data) => {
     return _.map(data, _candle => {
         let candle = {};
         for (let i = 0; i < key_Value.length; i++) {
-            candle[key_Value[i]] = _candle[i];
+            candle[key_Value[i]] = parseFloat(_candle[i]);
         }
         return candle;
     })
