@@ -228,7 +228,20 @@ const tranformToValidDateRange = (exchange, exchangeName, asset, currency, begin
                                     "ignore" : "0"
                                 });
                             } else {
-                                throw new Error("Không tìm thấy previous candle in database");
+                                newCandleFromExchange.push({
+                                    "start" : start,
+                                    "open" : 0,
+                                    "high" : 0,
+                                    "low" : 0,
+                                    "close" : 0,
+                                    "volume" : 0,
+                                    "end_time" : start + (60 * 1000) - 1,
+                                    "quote_asset_volume" : 0,
+                                    "trades" : 0,
+                                    "taker_buy_base_asset_volume" : 0,
+                                    "taker_buy_quote_asset_volume" : 0,
+                                    "ignore" : "0"
+                                });
                             }
                         } else {
                             newCandleFromExchange.push({
