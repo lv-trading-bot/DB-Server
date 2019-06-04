@@ -21,6 +21,15 @@ const _ = require('lodash');
 const moment = require('moment');
 const log = require('../../log');
 const utils = require('../../utils');
+const numberLimitRequestPerMinuteOfBinace = 1100;
+
+let numberOfRequestPerMinute = numberLimitRequestPerMinuteOfBinace;
+
+setTimeout(() => {
+    setInterval(() => {
+        numberOfRequestPerMinute = 0;
+    }, 1000 * 60);
+}, (60 - parseInt(moment().second()) + 1) * 1000)
 
 /**
  * @param {string} asset - Example "ETH", "BTC",...
@@ -37,7 +46,15 @@ const Binance = function (asset, currency) {
  * @param {Object} endTime - Moment, startTime và endTime không cách nhau quá 12h
  */
 Binance.prototype.getCandles = function (startTime, endTime) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+
+        if(numberOfRequestPerMinute >= numberLimitRequestPerMinuteOfBinace) {
+            log.warn(`Request to Binace is ${numberOfRequestPerMinute} over ${numberLimitRequestPerMinuteOfBinace}, sleep 30s.`)
+            await utils.wait(30 * 1000);
+            return resolve(await this.getCandles(startTime, endTime));
+        }
+        numberOfRequestPerMinute++;
+
         let reqData = {
             symbol: this.pair,
             startTime: startTime.startOf('minute').utc().unix() * 1000,
@@ -57,14 +74,26 @@ Binance.prototype.getCandles = function (startTime, endTime) {
             })
             .catch(async err => {
                 if (err.response) {
+                    log.info(numberOfRequestPerMinute);
                     log.info(err.response);
-                    reject(new Error(err.response.data.msg));
+                    // Vượt ngưỡng và sắp bị band
+                    if(
+                        // err.response.status == 418 
+                        // || err.response.status == 429 
+                        // || err.response.status == 403 //
+                        (parseInt(err.response.status) >= 400 && parseInt(err.response.status) < 500)
+                        ) {
+                        await utils.wait(5*60*1000);
+                    } else {
+                    // Lỗi
+                        return reject(new Error(err.response.data.msg));
+                    }
                 } else {
                     // Có thể là do rớt mạng
                     log.info('' + err);
                     await utils.wait(1000);
-                    resolve(await this.getCandles(startTime, endTime));
                 }
+                resolve(await this.getCandles(startTime, endTime));
             })
     })
 }
