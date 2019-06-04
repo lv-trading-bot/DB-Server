@@ -17,7 +17,7 @@ utils.wait = (milisecond) => {
  * @param {string} currency - name of Currency
  */
 utils.generateCollectionName = (exchange, asset, currency) => {
-    return [exchange, asset, currency].join("");
+    return [exchange, asset, currency].join("_");
 }
 
 utils.getConfig = () => {
