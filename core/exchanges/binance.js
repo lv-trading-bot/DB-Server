@@ -29,7 +29,7 @@ setTimeout(() => {
     setInterval(() => {
         numberOfRequestPerMinute = 0;
     }, 1000 * 60);
-}, (60 - parseInt(moment().second()) + 1) * 1000)
+}, (60 * 1000 - parseInt(moment().millisecond())))
 
 /**
  * @param {string} asset - Example "ETH", "BTC",...
@@ -54,6 +54,7 @@ Binance.prototype.getCandles = function (startTime, endTime) {
             return resolve(await this.getCandles(startTime, endTime));
         }
         numberOfRequestPerMinute++;
+        let oldNumberofRequestPerMinute = numberOfRequestPerMinute;
 
         let reqData = {
             symbol: this.pair,
@@ -69,20 +70,28 @@ Binance.prototype.getCandles = function (startTime, endTime) {
                 params: reqData
             })
             .then((res) => {
+                if (oldNumberofRequestPerMinute > numberOfRequestPerMinute) {
+                    numberOfRequestPerMinute++;
+                }
                 log.info(`${res.data.length} candles of ${this.asset}/${this.currency} from ${startTime.utc().format("YYYY-MM-DD HH:mm:ss")} to ${endTime.utc().format("YYYY-MM-DD HH:mm:ss")}`)
                 resolve(this._processData(res.data));
             })
             .catch(async err => {
+                if (oldNumberofRequestPerMinute > numberOfRequestPerMinute) {
+                    numberOfRequestPerMinute++;
+                }
                 if (err.response) {
                     log.info(numberOfRequestPerMinute);
                     log.info(err.response);
-                    // Vượt ngưỡng và sắp bị band
+                    // Vượt ngưỡng và sắp bị ban
                     if(
                         // err.response.status == 418 
                         // || err.response.status == 429 
                         // || err.response.status == 403 //
                         (parseInt(err.response.status) >= 400 && parseInt(err.response.status) < 500)
                         ) {
+                        // bắt các cặp khác cùng chờ
+                        numberOfRequestPerMinute = numberLimitRequestPerMinuteOfBinace;
                         await utils.wait(5*60*1000);
                     } else {
                     // Lỗi
