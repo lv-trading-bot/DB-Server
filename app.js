@@ -10,6 +10,8 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
+const AUTHENTICATION_TOKEN = process.env.AUTHENTICATION_TOKEN;
+
 // Connect to manager
 require('./lib/socket').connect();
 
@@ -24,6 +26,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Authentication
+app.use((req, res, next) => {
+  let token = req.header("Authentication");
+  if (token !== AUTHENTICATION_TOKEN) {
+    res.status(403).send({error: "Token is not valid"});
+    return;
+  } else {
+    next();
+  }
+})
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
