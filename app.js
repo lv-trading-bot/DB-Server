@@ -4,6 +4,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var fs = require('fs');
+const log = require('./log');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -31,6 +32,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
   let token = req.header("Authorization");
   if (token !== AUTHENTICATION_TOKEN) {
+    log.warn("Receved a invalid request");
     res.status(403).send({error: "Token is not valid"});
     return;
   } else {
