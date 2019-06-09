@@ -29,7 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Authentication
 app.use((req, res, next) => {
-  let token = req.header("Authentication");
+  let token = req.header("Authorization");
   if (token !== AUTHENTICATION_TOKEN) {
     res.status(403).send({error: "Token is not valid"});
     return;
