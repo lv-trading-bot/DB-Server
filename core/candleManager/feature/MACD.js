@@ -3,10 +3,10 @@ const _ = require('lodash');
 
 const Feature = function ({short, long, signal}) {
   this.diff = false;
-  this.config = {short, long, signal};
-  this.short = new EMA(short);
-  this.long = new EMA(long);
-  this.signal = new EMA(signal);
+  this.config = {short: short || 12, long: long || 26, signal: signal || 9};
+  this.short = new EMA(this.config.short);
+  this.long = new EMA(this.config.long);
+  this.signal = new EMA(this.config.signal);
 }
 
 /**

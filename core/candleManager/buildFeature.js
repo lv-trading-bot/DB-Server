@@ -23,7 +23,8 @@ const buildFeature = function (exchangeName, asset, currency, candleSize, from, 
             try {
                 if (typeof features[i] === 'string') {
                     features[i] = {
-                        name: features[i]
+                        name: features[i],
+                        params: {}
                     }
                 }
                 let feature = new(require('./feature/' + features[i].name))(features[i].params);

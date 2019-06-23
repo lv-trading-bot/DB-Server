@@ -2,7 +2,7 @@ var SMMA = require('./SMMA');
 
 const Feature = function ({interval}) {
   this.lastClose = null;
-  this.weight = interval;
+  this.weight = interval || 14;
   this.avgU = new SMMA(this.weight);
   this.avgD = new SMMA(this.weight);
   this.u = 0;
